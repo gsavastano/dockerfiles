@@ -6,8 +6,8 @@
 # 	--device /dev/dri:/dev/dri \
 # 	jess/plex-home-theater
 #
-FROM ubuntu:14.04
-MAINTAINER Jessie Frazelle <jess@linux.com>
+FROM ubuntu:16.04
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 RUN apt-get update && apt-get install -y \
 	software-properties-common \
@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
 	add-apt-repository ppa:pulse-eight/libcec && \
 	apt-get update && \
 	apt-get install -y \
-	libcec-dev \
 	plexhometheater \
 	&& rm -rf /var/lib/apt/lists/*
 

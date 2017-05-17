@@ -7,7 +7,7 @@
 #	jess/ncmpc
 #
 FROM debian:sid
-MAINTAINER Jessica Frazelle <jess@docker.com>
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 RUN apt-get update && apt-get install -y \
 	ncmpc \

@@ -1,5 +1,5 @@
-FROM debian:jessie
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM debian:stretch
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 # run
 # docker run -d -p 1234:80 -p 25:25 jess/mailman
@@ -17,9 +17,9 @@ RUN apt-get update && apt-get install -y \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Lighttpd configuration
-ADD lighttpd.conf /etc/lighttpd/lighttpd.conf
+COPY lighttpd.conf /etc/lighttpd/lighttpd.conf
 
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 25 80
 

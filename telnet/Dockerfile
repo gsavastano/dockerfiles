@@ -4,6 +4,6 @@
 #	jess/telnet "$@"
 #
 FROM alpine:latest
-MAINTAINER Jessica Frazelle <jess@docker.com>
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 ENTRYPOINT [ "telnet" ]

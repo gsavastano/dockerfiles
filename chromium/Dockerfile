@@ -1,48 +1,54 @@
-# VERSION:		  0.1
-# DESCRIPTION:	  Create chromium container with its dependencies
-# AUTHOR:		  Jessica Frazelle <jess@docker.com>
-# COMMENTS:
-#	This file describes how to build a Chromium container with all
-#	dependencies installed. It uses native X11 unix socket.
-#	Tested on Debian Jessie
-# USAGE:
-#	# Download Chromium Dockerfile
-#	wget http://raw.githubusercontent.com/jfrazelle/dockerfiles/master/chromium/Dockerfile
+# Run Chromium in a container
 #
-#	# Build chromium image
-#	docker build -t chromium .
+# docker run -it \
+#	--net host \ # may as well YOLO
+#	--cpuset-cpus 0 \ # control the cpu
+#	--memory 512mb \ # max memory it can use
+#	-v /tmp/.X11-unix:/tmp/.X11-unix \ # mount the X11 socket
+#	-e DISPLAY=unix$DISPLAY \
+#	-v $HOME/Downloads:/home/chromium/Downloads \
+#	-v $HOME/.config/chromium/:/data \ # if you want to save state
+#	--security-opt seccomp=$HOME/chrome.json \
+#	--device /dev/snd \ # so we have sound
+#	-v /dev/shm:/dev/shm \
+#	--name chromium \
+#	jess/chromium
 #
-#	# Run stateful data-on-host chromium. For ephemeral, remove -v /data/chromium:/data
-#	docker run -v /data/chromium:/data -v /tmp/.X11-unix:/tmp/.X11-unix \
-#		-e DISPLAY=unix$DISPLAY chromium
-
-#	# To run stateful dockerized data containers
-#	docker run --volumes-from chromium-data -v /tmp/.X11-unix:/tmp/.X11-unix \
-#		-e DISPLAY=unix$DISPLAY chromium
+# You will want the custom seccomp profile:
+# 	wget https://raw.githubusercontent.com/jfrazelle/dotfiles/master/etc/docker/seccomp/chrome.json -O ~/chrome.json
 
 # Base docker image
-FROM debian:sid
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM debian:stretch
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
-ADD https://jesss.s3.amazonaws.com/debs/google-talkplugin_current_amd64.deb /src/google-talkplugin_current_amd64.deb
+ADD https://dl.google.com/linux/direct/google-talkplugin_current_amd64.deb /src/google-talkplugin_current_amd64.deb
 
 # Install Chromium
-RUN sed -i.bak 's/sid main/sid main contrib non-free/g' /etc/apt/sources.list && \
-	apt-get update && apt-get install -y \
-	chromium \
-	chromium-l10n \
-	libcanberra-gtk-module \
-	libexif-dev \
-	libgl1-mesa-dri \
-	libgl1-mesa-glx \
-	libpango1.0-0 \
-	libv4l-0 \
-	pepperflashplugin-nonfree \
-	--no-install-recommends \ 
-	&& rm -rf /var/lib/apt/lists/* \
-	&& mkdir -p /etc/chromium.d/ \
-	&& /bin/echo -e 'export GOOGLE_API_KEY="AIzaSyCkfPOPZXDKNn8hhgu3JrA62wIgC93d44k"\nexport GOOGLE_DEFAULT_CLIENT_ID="811574891467.apps.googleusercontent.com"\nexport GOOGLE_DEFAULT_CLIENT_SECRET="kdloedMFGdGla2P1zacGjAQh"' > /etc/chromium.d/googleapikeys \
-	&& dpkg -i '/src/google-talkplugin_current_amd64.deb'
+RUN apt-get update && apt-get install -y \
+      chromium \
+      chromium-l10n \
+      fonts-liberation \
+      fonts-roboto \
+      hicolor-icon-theme \
+      libcanberra-gtk-module \
+      libexif-dev \
+      libgl1-mesa-dri \
+      libgl1-mesa-glx \
+      libpango1.0-0 \
+      libv4l-0 \
+      fonts-symbola \
+      --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /etc/chromium.d/ \
+    && /bin/echo -e 'export GOOGLE_API_KEY="AIzaSyCkfPOPZXDKNn8hhgu3JrA62wIgC93d44k"\nexport GOOGLE_DEFAULT_CLIENT_ID="811574891467.apps.googleusercontent.com"\nexport GOOGLE_DEFAULT_CLIENT_SECRET="kdloedMFGdGla2P1zacGjAQh"' > /etc/chromium.d/googleapikeys \
+    && dpkg -i '/src/google-talkplugin_current_amd64.deb'
+
+# Add chromium user
+RUN groupadd -r chromium && useradd -r -g chromium -G audio,video chromium \
+    && mkdir -p /home/chromium/Downloads && chown -R chromium:chromium /home/chromium
+
+# Run as non privileged user
+USER chromium
 
 ENTRYPOINT [ "/usr/bin/chromium" ]
 CMD [ "--user-data-dir=/data" ]

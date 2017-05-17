@@ -1,8 +1,5 @@
-FROM debian:jessie
-MAINTAINER Jessica Frazelle <jess@docker.com>
-
-RUN apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
-	&& echo "deb http://nginx.org/packages/mainline/debian/ jessie nginx" >> /etc/apt/sources.list
+FROM debian:stretch
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 RUN apt-get update && apt-get install -y \
 	ca-certificates \
@@ -18,8 +15,11 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY mime.types /etc/nginx/mime.types
+COPY telize.conf /etc/nginx/conf.d/telize.conf
 
 EXPOSE 80 443
+
+ENV TELIZE_VERSION 1.07
 
 RUN buildDeps=' \
 		curl \
@@ -33,10 +33,11 @@ RUN buildDeps=' \
 	&& curl -sSL http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz -o /usr/share/GeoIP/GeoLiteCity.dat.gz \
 	&& curl -sSL http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz -o /usr/share/GeoIP/GeoIPASNum.dat.gz \
 	&& gunzip /usr/share/GeoIP/*gz \
-	&& git clone https://github.com/fcambus/telize.git /usr/src/telize \
-	&& cd /usr/src/telize \
-	&& cp timezone*.conf /etc/nginx/ \
-	&& cp telize /etc/nginx/conf.d/telize.conf \
+	&& git clone --depth 1 --branch "${TELIZE_VERSION}" https://github.com/fcambus/telize.git /usr/src/telize \
+	&& ( \
+		cd /usr/src/telize \
+		&& cp timezone*.conf /etc/nginx/ \
+	) \
 	&& rm -rf /usr/src/telize \
 	&& apt-get purge -y --auto-remove $buildDeps
 

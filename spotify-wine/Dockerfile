@@ -9,8 +9,8 @@
 #	--name spotify-wine \
 #	jess/spotify-wine bash
 #
-FROM jess/wine
-MAINTAINER Jessie Frazelle <jess@linux.com>
+FROM r.j3ss.co/wine
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 ADD https://d1clcicqv97n4s.cloudfront.net/ctrl/SpotifySetup.exe /usr/src/SpotifySetup.exe
 

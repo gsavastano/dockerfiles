@@ -7,11 +7,10 @@
 # 	jess/shorewall
 #
 FROM alpine:latest
-MAINTAINER Jessica Frazelle <jess@docker.com>
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
-RUN apk update && apk add \
+RUN apk --no-cache add \
 	shorewall \
-	&& rm -rf /var/cache/apk/* \
 	&& touch /var/log/messages
 
 COPY ./etc /etc/shorewall

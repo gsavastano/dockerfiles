@@ -1,17 +1,36 @@
 FROM alpine:latest
-MAINTAINER Jessica Frazelle <jess@docker.com>
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
-RUN apk update && apk add \
-	ca-certificates \
-	curl \
-	&& curl -sSL https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-2.21-r2.apk -o /tmp/glibc-2.21-r2.apk \
-	&& apk add --allow-untrusted /tmp/glibc-2.21-r2.apk \
-	&& curl -sSL https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-bin-2.21-r2.apk -o /tmp/glibc-bin-2.21-r2.apk \
-	&& apk add --allow-untrusted /tmp/glibc-bin-2.21-r2.apk \
-	&& rm -rf /tmp/glibc* \
-	&& rm -rf /var/cache/apk/*
+ENV PATH /go/bin:/usr/local/go/bin:$PATH
+ENV GOPATH /go
 
-RUN	curl -sSL https://jesss.s3.amazonaws.com/binaries/vault -o /bin/vault \
-	&& chmod +x /bin/vault
+RUN	apk --no-cache add \
+	ca-certificates
 
-ENTRYPOINT [ "/bin/vault" ]
+ENV VAULT_VERSION v0.7.2
+
+RUN buildDeps=' \
+		bash \
+		go \
+		git \
+		gcc \
+		g++ \
+		libc-dev \
+		libgcc \
+		make \
+		zip \
+	' \
+	set -x \
+	&& apk --no-cache add --repository https://dl-3.alpinelinux.org/alpine/edge/community $buildDeps \
+	&& mkdir -p /go/src/github.com/hashicorp \
+	&& git clone --depth 1 --branch ${VAULT_VERSION} https://github.com/hashicorp/vault /go/src/github.com/hashicorp/vault \
+	&& cd /go/src/github.com/hashicorp/vault \
+	&& go get github.com/mitchellh/gox \
+	&& XC_ARCH="amd64" XC_OS="linux" XC_OSARCH="linux/amd64" make bin \
+	&& mv bin/vault /usr/bin/ \
+	&& apk del $buildDeps \
+	&& rm -rf /go \
+	&& echo "Build complete."
+
+
+ENTRYPOINT [ "vault" ]

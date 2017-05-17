@@ -10,8 +10,8 @@
 #
 
 # Base docker image
-FROM debian:sid
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM debian:jessie
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 ADD https://download1.rstudio.org/rstudio-0.99.484-amd64.deb /src/rstudio.deb
 

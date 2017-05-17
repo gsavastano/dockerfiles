@@ -1,6 +1,5 @@
-# VERSION:		  0.1
 # DESCRIPTION:	  Create the atom editor in a container
-# AUTHOR:		  Jessica Frazelle <jess@docker.com>
+# AUTHOR:		  Jessie Frazelle <jess@linux.com>
 # COMMENTS:
 #	This file describes how to build the atom editor
 #	in a container with all dependencies installed.
@@ -10,7 +9,7 @@
 #	Tested on Debian Jessie.
 # USAGE:
 #	# Download atom Dockerfile
-#	wget http://raw.githubusercontent.com/jfrazelle/dockerfiles/master/atom/Dockerfile
+#	wget https://raw.githubusercontent.com/jessfraz/dockerfiles/master/atom/Dockerfile
 #
 #	# Build atom image
 #	docker build -t atom .
@@ -20,32 +19,43 @@
 #
 
 # Base docker image
-FROM jess/chromium
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM debian:stretch
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-	ca-certificates \
-	curl \
+	git \
 	gconf2 \
 	gconf-service \
-	git \
 	gvfs-bin \
 	libasound2 \
+	libcap2 \
 	libgconf-2-4 \
 	libgnome-keyring-dev \
 	libgtk2.0-0 \
 	libnotify4 \
 	libnss3 \
+	libxkbfile1 \
+	libxss1 \
 	libxtst6 \
+	xdg-utils \
 	--no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 
-ENV ATOM_VERSION 1.1.0
+ENV ATOM_VERSION 1.17.0
 
-RUN curl -sSL https://github.com/atom/atom/releases/download/v${ATOM_VERSION}/atom-amd64.deb -o /tmp/atom-amd64.deb \
+# download the source
+RUN buildDeps=' \
+		ca-certificates \
+		curl \
+	' \
+	&& set -x \
+	&& apt-get update && apt-get install -y $buildDeps --no-install-recommends \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& curl -sSL https://github.com/atom/atom/releases/download/v${ATOM_VERSION}/atom-amd64.deb -o /tmp/atom-amd64.deb \
 	&& dpkg -i /tmp/atom-amd64.deb \
-	&& rm -rf /tmp
+	&& rm -rf /tmp/*.deb \
+	&& apt-get purge -y --auto-remove $buildDeps
 
 # Autorun atom
 ENTRYPOINT [ "atom", "--foreground" ]

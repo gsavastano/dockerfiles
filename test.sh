@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
 # this is kind of an expensive check, so let's not do this twice if we
 # are running more than one validate bundlescript
-VALIDATE_REPO='https://github.com/jfrazelle/dockerfiles.git'
+VALIDATE_REPO='https://github.com/jessfraz/dockerfiles.git'
 VALIDATE_BRANCH='master'
 
 VALIDATE_HEAD="$(git rev-parse --verify HEAD)"
@@ -28,6 +29,10 @@ unset IFS
 
 # build the changed dockerfiles
 for f in "${files[@]}"; do
+	if ! [[ -e "$f" ]]; then
+		continue
+	fi
+
 	image=${f%Dockerfile}
 	base=${image%%\/*}
 	suite=${image##*\/}

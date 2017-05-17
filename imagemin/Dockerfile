@@ -6,18 +6,21 @@
 #	--entrypoint bash \
 #	jess/imagemin
 #
-FROM alpine
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM node:alpine
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
-RUN apk update && apk add \
-	autoconf \
-	automake \
-	build-base \
+RUN apk --no-cache add \
 	file \
-	libpng-dev \
-	nasm \
-	nodejs \
-	&& rm -rf /var/cache/apk/* \
-	&& npm install --global imagemin
+	libpng
+
+RUN set -x \
+	&& apk add --no-cache --virtual .build-deps \
+		autoconf \
+		automake \
+		build-base \
+		libpng-dev \
+		nasm \
+	&& npm install --global imagemin-cli \
+	&& apk del .build-deps
 
 CMD [ "imagemin", "--help" ]

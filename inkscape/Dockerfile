@@ -5,8 +5,8 @@
 #	-e DISPLAY=unix$DISPLAY \
 #	infoslack/inkscape
 #
-FROM ubuntu:14.04
-MAINTAINER Daniel Romero <infoslack@gmail.com>
+FROM ubuntu:16.04
+LABEL maintainer "Daniel Romero <infoslack@gmail.com>"
 
 ENV DEBIAN_FRONTEND noninteractive
 

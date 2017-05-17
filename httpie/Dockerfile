@@ -1,11 +1,10 @@
 FROM alpine:latest
-MAINTAINER Jessica Frazelle <jess@docker.com>
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
-RUN apk update && apk add \
+RUN apk --no-cache add \
 	ca-certificates \
 	python \
-	py-pip \
-	&& rm -rf /var/cache/apk/* \
+	py2-pip \
 	&& pip install httpie httpie-unixsocket
 
 ENTRYPOINT [ "http" ]

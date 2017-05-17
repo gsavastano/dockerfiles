@@ -1,5 +1,5 @@
-FROM debian:sid
-MAINTAINER Jessica Frazelle <jess@docker.com>
+FROM debian:jessie
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 RUN apt-get update && apt-get install -y \
 	libgmp10 \
@@ -24,9 +24,9 @@ RUN buildDeps=' \
 	&& set -x \
 	&& apt-get update && apt-get install -y $buildDeps --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& git clone https://github.com/magnumripper/JohnTheRipper.git /usr/src/johntheripper \
+	&& git clone --depth 1 https://github.com/magnumripper/JohnTheRipper.git /usr/src/johntheripper \
 	&& cd /usr/src/johntheripper/src \
-	&& ./configure \
+	&& ./configure || cat config.log \
 	&& make \
 	&& cp -r ../run/* /usr/local/bin/ \
 	&& rm -rf /usr/src/johntheripper \

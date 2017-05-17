@@ -1,13 +1,12 @@
-# VERSION:		  0.1
 # DESCRIPTION:	  Run text-based emacs tetris in a container
-# AUTHOR:		  Jessica Frazelle <jess@docker.com>
+# AUTHOR:		  Jessie Frazelle <jess@linux.com>
 # COMMENTS:
 #	This file describes how to build tetris in a container with all
-#	dependencies installed. 
+#	dependencies installed.
 #	Tested on Debian Jessie
 # USAGE:
 #	# Download tetris Dockerfile
-#	wget http://raw.githubusercontent.com/jfrazelle/dockerfiles/master/tetris/Dockerfile
+#	wget https://raw.githubusercontent.com/jessfraz/dockerfiles/master/tetris/Dockerfile
 #
 #	# Build tetris image
 #	docker build -t tetris .
@@ -17,14 +16,13 @@
 
 # Base docker image
 FROM alpine:latest
-MAINTAINER Jessica Frazelle <jess@docker.com>
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
 # Install emacs:
-# Note: Eamcs is only in testing repo -> http://pkgs.alpinelinux.org/packages?package=emacs&repo=all&arch=x86_64
-RUN apk update && apk add \
-	emacs \
-	--update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
-	&& rm -rf /var/cache/apk/*
+# Note: Emacs is only in community repo -> https://pkgs.alpinelinux.org/packages?package=emacs&repo=all&arch=x86_64
+RUN apk --no-cache add \
+	--repository https://dl-3.alpinelinux.org/alpine/edge/community/ \
+	emacs
 
 # Autorun tetris
 CMD ["/usr/bin/emacs", "-f", "tetris"]

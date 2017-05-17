@@ -1,28 +1,49 @@
 FROM alpine:latest
-MAINTAINER Jessica Frazelle <jess@docker.com>
+LABEL maintainer "Jessie Frazelle <jess@linux.com>"
 
-RUN apk update && apk add \
-	ca-certificates \
-	curl \
-	unzip \
-	&& curl -sSL https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-2.21-r2.apk -o /tmp/glibc-2.21-r2.apk \
-	&& apk add --allow-untrusted /tmp/glibc-2.21-r2.apk \
-	&& curl -sSL https://circle-artifacts.com/gh/andyshinn/alpine-pkg-glibc/6/artifacts/0/home/ubuntu/alpine-pkg-glibc/packages/x86_64/glibc-bin-2.21-r2.apk -o /tmp/glibc-bin-2.21-r2.apk \
-	&& apk add --allow-untrusted /tmp/glibc-bin-2.21-r2.apk \
-	&& rm -rf /tmp/glibc* \
-	&& rm -rf /var/cache/apk/*
+ENV PATH /go/bin:/usr/local/go/bin:$PATH
+ENV GOPATH /go
+#ENV GO15VENDOREXPERIMENT 1
 
-ENV CONSUL_VERSION 0.5.2
+RUN	apk --no-cache add \
+	ca-certificates
 
-RUN	curl -sSL https://jesss.s3.amazonaws.com/binaries/consul/${CONSUL_VERSION}/consul -o /bin/consul \
-	&& curl -sSL https://jesss.s3.amazonaws.com/binaries/curl-unix-socket -o /bin/curl-unix-socket \
-	&& curl -sSL https://jesss.s3.amazonaws.com/binaries/consul/${CONSUL_VERSION}/ui.zip -o /tmp/ui.zip \
-	&& unzip /tmp/ui.zip -d /usr/src/ \
-	&& rm -rf /tmp/ui.zip \
-	&& mv /usr/src/dist /usr/src/consul \
-	&& mkdir -p /etc/consul.d/ \
-	&& chmod +x /bin/consul \
-	&& chmod +x /bin/curl-unix-socket \
-	&& /usr/glibc/usr/bin/ldconfig /lib /usr/glibc/usr/lib
+ENV CONSUL_VERSION v0.8.3
 
-ENTRYPOINT [ "/bin/consul" ]
+RUN buildDeps=' \
+		bash \
+		go \
+		git \
+		gcc \
+		g++ \
+		libc-dev \
+		libgcc \
+		make \
+		nodejs \
+		ruby \
+		ruby-dev \
+		zip \
+	' \
+	set -x \
+	&& apk --no-cache add --repository https://dl-3.alpinelinux.org/alpine/edge/community $buildDeps \
+	&& go get github.com/Soulou/curl-unix-socket \
+	&& mv /go/bin/curl-unix-socket /usr/bin/ \
+	&& mkdir -p /go/src/github.com/hashicorp /etc/consul.d \
+	&& git clone --depth 1 --branch ${CONSUL_VERSION} https://github.com/hashicorp/consul /go/src/github.com/hashicorp/consul \
+	&& cd /go/src/github.com/hashicorp/consul \
+	&& XC_ARCH="amd64" XC_OS="linux" make all \
+	&& mv bin/consul /usr/bin/ \
+	&& cd ui \
+	&& gem install bundler io-console --no-ri --no-rdoc \
+	&& bundle install \
+	&& make dist \
+	&& mkdir -p /usr/src/consul \
+	&& mv index.html /usr/src/consul \
+	&& mv static /usr/src/consul/ \
+	&& mv javascripts /usr/src/consul/ \
+	&& apk del $buildDeps \
+	&& rm -rf /go \
+	&& echo "Build complete."
+
+
+ENTRYPOINT [ "consul" ]
